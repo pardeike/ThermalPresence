@@ -11,8 +11,6 @@ auto averagedPixels = (float *)calloc(totalPixelCount, sizeof(float));
 auto bytes = (uint8_t *)calloc(totalPixelCount, sizeof(uint8_t));
 int histogram[256];
 
-String url = "http://AndreassAir.local/index.html";
-
 void setup() {
 	General::init("ThermalPresence", "AP iPhone", "12345678");
 	LED::set(CRGB::Green);
@@ -50,7 +48,8 @@ void sendValues(float* values) {
 					bytes[j] = i < 128 ? 0 : 255;
 		}
 
-	Network::send(url, "application/octet-stream", bytes, totalPixelCount);
+	// TODO send http://AndreassAir.local/historgram
+	Network::send("http://AndreassAir.local/upload", "application/octet-stream", bytes, totalPixelCount);
 }
 
 void filter_frame(float *in, float *out) {
