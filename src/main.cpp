@@ -12,7 +12,7 @@ auto bytes = (uint8_t *)calloc(totalPixelCount, sizeof(uint8_t));
 int histogram[256];
 
 void setup() {
-	General::init("ThermalPresence", "AP iPhone", "12345678");
+	General::init((char *)"ThermalPresence", (char *)"AP iPhone", (char *)"12345678");
 	LED::set(CRGB::Green);
 	M5.delay(500);
 }
