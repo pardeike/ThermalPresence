@@ -13,7 +13,7 @@ class Thermal {
 	static int init();
 	static float * createBuffer();
 	static void readImage(float *pixels);
-	static void readThermal(float *pixels);
+	static int readThermal(float *pixels);
 	static void debugPixels(float *pixels);
 };
 

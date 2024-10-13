@@ -16,13 +16,22 @@ char chars[] = "`.-':_,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d
 
 #define TA_SHIFT 8
 
+// useful info:
+// https://cdn.hackaday.io/files/1614996909573216/MLX90640%20driver.pdf
+
 int Thermal::init() {
   Wire.begin();
-  Wire.setClock(450000);
+  Wire.setClock(1000000UL);
 
   int sda = M5.Ex_I2C.getSDA();
   int scl = M5.Ex_I2C.getSCL();
-  M5.Ex_I2C.begin(0x33, sda, scl);
+  M5.Ex_I2C.begin(MLX90640_address, sda, scl);
+
+  while (true) {
+    Wire.beginTransmission(MLX90640_address);
+    if (Wire.endTransmission() == 0)
+      break;
+  }
 
 	int status;
 	status = MLX90640_DumpEE(MLX90640_address, eeMLX90640);
@@ -39,8 +48,13 @@ int Thermal::init() {
 		return -2;
 	}
 
-	MLX90640_SetRefreshRate(MLX90640_address, 0x05);
-	return 0;
+	MLX90640_SetRefreshRate(MLX90640_address, 0x04);
+  MLX90640_SetResolution(MLX90640_address, 0x00);
+
+  MLX90640_SetChessMode(MLX90640_address);
+  //MLX90640_SetInterleavedMode(MLX90640_address);
+
+  return 0;
 }
 
 float * Thermal::createBuffer() {
@@ -52,20 +66,25 @@ void Thermal::readImage(float *pixels) {
   MLX90640_GetImage(mlx90640Frame, &mlx90640, pixels);
 }
 
-void Thermal::readThermal(float *pixels) {
+int Thermal::readThermal(float *pixels) {
   uint16_t mlx90640Frame[834];
   int result = MLX90640_GetFrameData(MLX90640_address, mlx90640Frame);
   if (result < 0) {
     Serial.print("MLX90640_GetFrameData = ");
     Serial.println(result);
-    return;
+    return -1;
   }
 
-  /*float vdd = */MLX90640_GetVdd(mlx90640Frame, &mlx90640);
-  float Ta = MLX90640_GetTa(mlx90640Frame, &mlx90640);
-  float tr = Ta - TA_SHIFT; //Reflected temperature based on the sensor ambient temperature
-  float emissivity = 0.95;
+  //float vdd = MLX90640_GetVdd(mlx90640Frame, &mlx90640);
+  //float Ta = MLX90640_GetTa(mlx90640Frame, &mlx90640);
+
+  //Reflected temperature based on the sensor ambient temperature
+  // float tr = Ta - TA_SHIFT;
+
+  float tr = 0; //22.0;
+  float emissivity = 1; //0.95;
   MLX90640_CalculateTo(mlx90640Frame, &mlx90640, emissivity, tr, pixels);
+  return MLX90640_GetSubPageNumber(mlx90640Frame);;
 }
 
 void Thermal::debugPixels(float *pixels) {
